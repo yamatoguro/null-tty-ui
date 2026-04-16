@@ -1,0 +1,6 @@
+id = "system_overview"
+version = "0.1.0"
+title = "System Overview"
+description = "Displays CPU, memory, thermal and uptime stats."
+update_interval_ms = 1000
+permissions = ["metrics.read"]

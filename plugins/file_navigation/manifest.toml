@@ -1,0 +1,6 @@
+id = "file_navigation"
+version = "0.1.0"
+title = "File Navigation"
+description = "Lightweight one-level file browser for configured root path"
+update_interval_ms = 3000
+permissions = ["fs.read"]

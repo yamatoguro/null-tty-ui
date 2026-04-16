@@ -1,0 +1,6 @@
+id = "process_list"
+version = "0.1.0"
+title = "Process List"
+description = "Shows top processes by CPU and memory usage."
+update_interval_ms = 2000
+permissions = ["metrics.read"]

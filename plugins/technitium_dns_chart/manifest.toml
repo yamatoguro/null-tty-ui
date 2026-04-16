@@ -1,0 +1,6 @@
+id = "technitium_dns_chart"
+version = "0.1.0"
+title = "Technitium DNS"
+description = "Renders DNS query charts from local Technitium API."
+update_interval_ms = 1000
+permissions = ["net.read", "metrics.read"]

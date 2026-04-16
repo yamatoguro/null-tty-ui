@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nullbyteui.local/schema/layout.v1.json",
+  "title": "NullByteUI Layout Schema v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profile",
+    "regions"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dns_host": {
+      "type": "string"
+    },
+    "dns_port": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535
+    },
+    "dns_token": {
+      "type": "string"
+    },
+    "diagnostics_log_path": {
+      "type": "string"
+    },
+    "target_fps": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "target_process_cpu_percent": {
+      "type": "number",
+      "minimum": 0
+    },
+    "target_process_rss_mb": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "terminal_boot_command": {
+      "type": "string"
+    },
+    "file_nav_root": {
+      "type": "string"
+    },
+    "regions": {
+      "type": "object",
+      "required": ["top", "left", "center", "right", "bottom"],
+      "properties": {
+        "top": { "$ref": "#/$defs/regionConfig" },
+        "left": { "$ref": "#/$defs/regionConfig" },
+        "center": { "$ref": "#/$defs/regionConfig" },
+        "right": { "$ref": "#/$defs/regionConfig" },
+        "bottom": { "$ref": "#/$defs/regionConfig" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "regionConfig": {
+      "type": "object",
+      "required": ["plugin"],
+      "properties": {
+        "plugin": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

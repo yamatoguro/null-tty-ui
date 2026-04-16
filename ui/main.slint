@@ -1,0 +1,124 @@
+export component MainWindow inherits Window {
+    in-out property <string> status_text: "booting";
+    in-out property <string> top_panel: "top";
+    in-out property <string> left_panel: "left";
+    in-out property <string> center_panel: "center";
+    in-out property <string> right_panel: "right";
+    in-out property <string> bottom_panel: "bottom";
+    width: 1280px;
+    height: 720px;
+    title: "nullbyteui";
+    background: #070b10;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        background: #070b10;
+
+        Text {
+            text: "NULLBYTE UI";
+            color: #4dd0e1;
+            font-size: 32px;
+            x: 24px;
+            y: 24px;
+        }
+
+        Text {
+            text: root.status_text;
+            color: #9fb3c8;
+            font-size: 18px;
+            x: 24px;
+            y: 78px;
+        }
+
+        Rectangle {
+            x: 24px;
+            y: 120px;
+            width: parent.width - 48px;
+            height: 86px;
+            border-color: #21495f;
+            border-width: 1px;
+            background: #0b1118;
+
+            Text {
+                text: root.top_panel;
+                color: #9bd6df;
+                font-size: 16px;
+                x: 14px;
+                y: 14px;
+            }
+        }
+
+        Rectangle {
+            x: 24px;
+            y: 216px;
+            width: 290px;
+            height: parent.height - 334px;
+            border-color: #21495f;
+            border-width: 1px;
+            background: #0b1118;
+
+            Text {
+                text: root.left_panel;
+                color: #9bd6df;
+                font-size: 14px;
+                x: 12px;
+                y: 12px;
+            }
+        }
+
+        Rectangle {
+            x: 324px;
+            y: 216px;
+            width: parent.width - 648px;
+            height: parent.height - 334px;
+            border-color: #2d6f84;
+            border-width: 1px;
+            background: #0c151d;
+
+            Text {
+                text: root.center_panel;
+                color: #d2f5ff;
+                font-size: 16px;
+                x: 12px;
+                y: 12px;
+            }
+        }
+
+        Rectangle {
+            x: parent.width - 314px;
+            y: 216px;
+            width: 290px;
+            height: parent.height - 334px;
+            border-color: #21495f;
+            border-width: 1px;
+            background: #0b1118;
+
+            Text {
+                text: root.right_panel;
+                color: #9bd6df;
+                font-size: 14px;
+                x: 12px;
+                y: 12px;
+            }
+        }
+
+        Rectangle {
+            x: 24px;
+            y: parent.height - 108px;
+            width: parent.width - 48px;
+            height: 84px;
+            border-color: #21495f;
+            border-width: 1px;
+            background: #0b1118;
+
+            Text {
+                text: root.bottom_panel;
+                color: #9bd6df;
+                font-size: 14px;
+                x: 12px;
+                y: 12px;
+            }
+        }
+    }
+}

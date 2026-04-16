@@ -1,0 +1,6 @@
+id = "log_stream"
+version = "0.1.0"
+title = "Log Stream"
+description = "Tails application and system logs."
+update_interval_ms = 500
+permissions = ["fs.read"]
