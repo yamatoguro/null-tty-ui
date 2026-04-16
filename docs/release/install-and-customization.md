@@ -9,6 +9,21 @@ cargo build --release
 Binario gerado:
 - target/release/nullbyteui
 
+## Instalacao direta do GitHub (sem clone)
+Cole este comando na Raspberry Pi 4:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/yamatoguro/null-tty-ui/main/deploy/install-from-github.sh)
+```
+
+Depois da instalacao, execute:
+
+```bash
+null-ui
+```
+
+Para sair da interface: pressione `q`.
+
 ## 2) Install on Raspberry Pi with systemd
 No Raspberry Pi (com permissao root):
 

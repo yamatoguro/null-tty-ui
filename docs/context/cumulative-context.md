@@ -91,3 +91,13 @@ This file is append-only and is the single source of progress truth during the p
 - why: Ensure traceable local history and publish all project work to the target remote repository.
 - files: .gitignore, docs/context/cumulative-context.md
 - next: Continue normal development flow with focused commits per feature/fix and push incrementally.
+
+## Entry 009
+- date: 2026-04-15
+- interaction_id: 009
+- tags: [installer, github, raspberry-pi, one-liner]
+- what: Added a direct GitHub installer script that works without cloning and provides a global `null-ui` command after install.
+- how: Created deploy/install-from-github.sh to download source tarball from GitHub, ensure Rust toolchain, build release, install files under /opt/nullbyteui, and create /usr/local/bin/null-ui wrapper; updated install guide with a one-line command for Raspberry Pi.
+- why: Enable frictionless install/test flow by pasting a single command into terminal on Raspberry Pi 4.
+- files: deploy/install-from-github.sh, docs/release/install-and-customization.md, docs/context/cumulative-context.md
+- next: Optionally add a release-asset installer path to avoid local compile time on low-power devices.
