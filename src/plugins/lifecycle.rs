@@ -84,10 +84,6 @@ impl PluginInstance {
                     .map(|(a, b, c)| format!("{a:.2} {b:.2} {c:.2}"))
                     .unwrap_or_else(|| "n/a".to_string()),
             ),
-            "terminal" => snapshot
-                .terminal_summary
-                .clone()
-                .unwrap_or_else(|| "PTY: connecting...".to_string()),
             "technitium_dns_chart" => snapshot
                 .dns_summary
                 .clone()

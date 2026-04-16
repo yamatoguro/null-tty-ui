@@ -12,7 +12,7 @@ CLEAN_INSTALL="${CLEAN_INSTALL:-0}"
 REQUIRED_PLUGINS=(
   "system_overview"
   "process_list"
-  "terminal"
+  "file_navigation"
   "technitium_dns_chart"
   "log_stream"
 )

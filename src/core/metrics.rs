@@ -20,8 +20,6 @@ pub struct SystemSnapshot {
     pub recent_logs: Vec<String>,
     /// Pre-rendered DNS summary for the Technitium panel (injected externally).
     pub dns_summary: Option<String>,
-    /// Pre-rendered terminal panel output (injected externally).
-    pub terminal_summary: Option<String>,
     /// Pre-rendered file navigation panel output (injected externally).
     pub file_nav_summary: Option<String>,
 }
@@ -99,7 +97,6 @@ impl MetricsCollector {
             load_avg,
             recent_logs,
             dns_summary: None,
-            terminal_summary: None,
             file_nav_summary: None,
         }
     }

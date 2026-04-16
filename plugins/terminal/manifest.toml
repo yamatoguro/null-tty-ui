@@ -1,6 +1,0 @@
-id = "terminal"
-version = "0.1.0"
-title = "Terminal"
-description = "Interactive shell panel using PTY bridge."
-update_interval_ms = 100
-permissions = ["shell.exec"]

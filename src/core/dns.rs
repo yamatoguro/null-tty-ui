@@ -1,9 +1,13 @@
 use std::collections::VecDeque;
-use std::net::TcpStream;
+use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
+use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+
+use anyhow::{bail, Context};
+use serde_json::Value;
 
 /// A single DNS stat sample polled from the Technitium API.
 #[derive(Debug, Clone)]
@@ -33,6 +37,7 @@ pub fn start_poller(host: &str, port: u16, token: &str, interval: Duration) -> A
     let token = token.to_string();
 
     thread::spawn(move || {
+        let mut last_logged_error: Option<String> = None;
         loop {
             match fetch_stats(&host, port, &token) {
                 Ok(sample) => {
@@ -42,10 +47,21 @@ pub fn start_poller(host: &str, port: u16, token: &str, interval: Duration) -> A
                     }
                     s.samples.push_back(sample);
                     s.last_error = None;
+
+                    if last_logged_error.is_some() {
+                        append_dns_log("[dns] poller recovered and data collection resumed");
+                        last_logged_error = None;
+                    }
                 }
                 Err(e) => {
                     let mut s = state_ref.lock().unwrap();
-                    s.last_error = Some(e.to_string());
+                    let msg = e.to_string();
+                    s.last_error = Some(msg.clone());
+
+                    if last_logged_error.as_deref() != Some(msg.as_str()) {
+                        append_dns_log(&format!("[dns] poller error: {msg}"));
+                        last_logged_error = Some(msg);
+                    }
                 }
             }
             thread::sleep(interval);
@@ -117,13 +133,22 @@ fn build_sparkline(values: impl Iterator<Item = u64>) -> String {
 /// Performs a minimal HTTP/1.0 GET to the Technitium stats endpoint using raw TCP.
 /// No async runtime required; runs in a dedicated background thread.
 fn fetch_stats(host: &str, port: u16, token: &str) -> anyhow::Result<DnsSample> {
-    use anyhow::Context;
-
     let addr = format!("{host}:{port}");
-    let path = format!("/api/dashboard/stats/get?token={token}&type=LastMinute");
+    let paths = build_candidate_paths(token);
+    let mut last_err: Option<anyhow::Error> = None;
 
-    let mut stream = TcpStream::connect(&addr)
-        .with_context(|| format!("tcp connect to {addr}"))?;
+    for path in paths {
+        match fetch_stats_from_path(host, &addr, &path) {
+            Ok(sample) => return Ok(sample),
+            Err(err) => last_err = Some(err),
+        }
+    }
+
+    Err(last_err.unwrap_or_else(|| anyhow::anyhow!("no DNS endpoint candidates available")))
+}
+
+fn fetch_stats_from_path(host: &str, addr: &str, path: &str) -> anyhow::Result<DnsSample> {
+    let mut stream = TcpStream::connect(addr).with_context(|| format!("tcp connect to {addr}"))?;
     stream.set_read_timeout(Some(Duration::from_secs(4)))?;
     stream.set_write_timeout(Some(Duration::from_secs(4)))?;
 
@@ -132,39 +157,44 @@ fn fetch_stats(host: &str, port: u16, token: &str) -> anyhow::Result<DnsSample> 
 
     let mut response = String::new();
     stream.read_to_string(&mut response)?;
-
-    parse_stats_response(&response)
+    parse_stats_response(&response).with_context(|| format!("while parsing endpoint {path}"))
 }
 
-/// Extracts stat fields from a minimal JSON response body without pulling in a JSON crate.
-fn parse_stats_response(raw: &str) -> anyhow::Result<DnsSample> {
-    use anyhow::bail;
+fn build_candidate_paths(token: &str) -> Vec<String> {
+    let mut paths = vec![
+        "/api/dashboard/stats/get?type=LastMinute".to_string(),
+        "/api/dashboard/stats".to_string(),
+    ];
 
-    // Split headers from body on blank line.
-    let body = if let Some(idx) = raw.find("\r\n\r\n") {
-        &raw[idx + 4..]
-    } else if let Some(idx) = raw.find("\n\n") {
-        &raw[idx + 2..]
-    } else {
-        bail!("no body separator in HTTP response");
-    };
-
-    fn extract_u64(body: &str, key: &str) -> u64 {
-        let search = format!("\"{}\":", key);
-        body.find(search.as_str())
-            .and_then(|i| {
-                let rest = &body[i + search.len()..];
-                let rest = rest.trim_start();
-                rest.split(|c: char| !c.is_ascii_digit()).next()
-            })
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0)
+    if !token.trim().is_empty() {
+        paths.insert(0, format!("/api/dashboard/stats/get?token={token}&type=LastMinute"));
+        paths.insert(1, format!("/api/dashboard/stats?token={token}"));
     }
 
-    let total = extract_u64(body, "totalQueries");
-    let blocked = extract_u64(body, "totalBlocked");
-    let cache = extract_u64(body, "totalCachedHits");
+    paths
+}
+
+/// Extracts DNS stats from JSON body returned by Technitium endpoints.
+fn parse_stats_response(raw: &str) -> anyhow::Result<DnsSample> {
+    // Split headers from body on blank line.
+    let (status_line, body) = split_http_response(raw)?;
+    if !status_line.contains(" 200 ") {
+        bail!("http status not ok: {status_line}");
+    }
+
+    let value: Value = serde_json::from_str(body).with_context(|| "invalid JSON in DNS response")?;
+
+    if let Some(err_msg) = extract_string_by_keys(&value, &["error", "message", "statusText"]) {
+        if err_msg.to_ascii_lowercase().contains("error") {
+            bail!("api error: {err_msg}");
+        }
+    }
+
+    let total = extract_u64_by_keys(&value, &["totalQueries", "queries", "totalRequests"]).unwrap_or(0);
+    let blocked = extract_u64_by_keys(&value, &["totalBlocked", "blocked", "blockedQueries"]).unwrap_or(0);
+    let cache = extract_u64_by_keys(&value, &["totalCachedHits", "cacheHits", "cachedQueries"]).unwrap_or(0);
     let allowed = total.saturating_sub(blocked);
+
     let ts = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
@@ -177,4 +207,73 @@ fn parse_stats_response(raw: &str) -> anyhow::Result<DnsSample> {
         cache_hits: cache,
         timestamp_secs: ts,
     })
+}
+
+fn split_http_response(raw: &str) -> anyhow::Result<(&str, &str)> {
+    let status_line = raw.lines().next().unwrap_or("unknown-status");
+
+    if let Some(idx) = raw.find("\r\n\r\n") {
+        return Ok((status_line, &raw[idx + 4..]));
+    }
+    if let Some(idx) = raw.find("\n\n") {
+        return Ok((status_line, &raw[idx + 2..]));
+    }
+
+    bail!("no body separator in HTTP response")
+}
+
+fn extract_u64_by_keys(root: &Value, keys: &[&str]) -> Option<u64> {
+    keys.iter().find_map(|key| extract_u64_recursive(root, key))
+}
+
+fn extract_u64_recursive(value: &Value, key: &str) -> Option<u64> {
+    match value {
+        Value::Object(map) => {
+            if let Some(candidate) = map.get(key) {
+                if let Some(n) = to_u64(candidate) {
+                    return Some(n);
+                }
+            }
+            map.values().find_map(|v| extract_u64_recursive(v, key))
+        }
+        Value::Array(items) => items.iter().find_map(|v| extract_u64_recursive(v, key)),
+        _ => None,
+    }
+}
+
+fn extract_string_by_keys(root: &Value, keys: &[&str]) -> Option<String> {
+    keys.iter().find_map(|key| extract_string_recursive(root, key))
+}
+
+fn extract_string_recursive(value: &Value, key: &str) -> Option<String> {
+    match value {
+        Value::Object(map) => {
+            if let Some(candidate) = map.get(key) {
+                if let Some(s) = candidate.as_str() {
+                    return Some(s.to_string());
+                }
+            }
+            map.values().find_map(|v| extract_string_recursive(v, key))
+        }
+        Value::Array(items) => items.iter().find_map(|v| extract_string_recursive(v, key)),
+        _ => None,
+    }
+}
+
+fn to_u64(value: &Value) -> Option<u64> {
+    match value {
+        Value::Number(n) => n.as_u64().or_else(|| n.as_i64().and_then(|v| u64::try_from(v).ok())),
+        Value::String(s) => s.parse::<u64>().ok(),
+        _ => None,
+    }
+}
+
+fn append_dns_log(message: &str) {
+    let log_path = "/tmp/nullbyteui/startup-diagnostics.log";
+    if let Some(parent) = std::path::Path::new(log_path).parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(log_path) {
+        let _ = writeln!(file, "{message}");
+    }
 }

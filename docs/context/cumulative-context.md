@@ -141,3 +141,13 @@ This file is append-only and is the single source of progress truth during the p
 - why: Guarantee users can trigger clean repair directly by parameter when running installer via `bash <(curl ...)`.
 - files: deploy/install-from-github.sh, README.md, docs/release/install-and-customization.md, docs/context/cumulative-context.md
 - next: Optionally support additional flags for non-sudo/local installs in restricted environments.
+
+## Entry 014
+- date: 2026-04-15
+- interaction_id: 014
+- tags: [runtime, terminal-removal, dns-fix, diagnostics]
+- what: Removed terminal/PTY module entirely from runtime and fixed DNS updater to use resilient endpoint fallback + JSON parsing with error logging in default diagnostics directory.
+- how: Deleted PTY module and references, switched center region default to `file_navigation`, removed `terminal_boot_command` from config/schema/docs, updated installer required plugins, rewrote DNS client to try multiple Technitium endpoints and parse nested JSON with `serde_json`, and appended DNS poller errors/recovery to `/tmp/nullbyteui/startup-diagnostics.log`.
+- why: Stop frame-by-frame terminal updates completely and make DNS panel actually refresh with real data while exposing actionable logs in the standard path.
+- files: src/core/app.rs, src/core/mod.rs, src/core/metrics.rs, src/core/dns.rs, src/plugins/lifecycle.rs, src/config/layout.rs, config/layout.default.toml, config/schema/layout.v1.json, deploy/install-from-github.sh, src/core/pty.rs (removed), plugins/terminal (removed), README.md, docs/release/install-and-customization.md, docs/spec/layout-schema-v1.md, Cargo.toml, docs/context/cumulative-context.md
+- next: Optionally add a DNS self-test command that verifies API connectivity and token before launching UI.

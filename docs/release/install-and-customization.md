@@ -65,7 +65,6 @@ Edite o arquivo:
 Campos comuns:
 - regions.<regiao>.plugin: troca plugin por regiao
 - dns_host / dns_port / dns_token: integra Technitium local
-- terminal_boot_command: comando que roda no painel PTY
 - file_nav_root: raiz do file_navigation
 - target_fps / target_process_cpu_percent / target_process_rss_mb: metas de desempenho
 

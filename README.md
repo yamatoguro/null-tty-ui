@@ -7,8 +7,7 @@ Painel eDEX-inspired para Raspberry Pi com foco em leveza, binario nativo e pers
 - Layout em 5 regioes: top, left, center, right, bottom.
 - Carregamento de plugins via manifestos em `plugins/*/manifest.toml`.
 - Coleta de metricas Linux em tempo real (CPU, memoria, disco, rede, load e logs).
-- Painel PTY real para terminal embarcado.
-- Painel de navegacao de arquivos com polling leve.
+- Painel de navegacao de arquivos no centro com polling leve.
 - Integracao com Technitium DNS via HTTP local com alertas de bloqueio.
 - Diagnostico periodico de FPS/CPU/RAM do processo.
 

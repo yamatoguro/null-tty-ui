@@ -25,7 +25,6 @@ Este documento congela o schema de configuracao da primeira versao instalavel do
 - target_fps: meta minima de FPS do processo.
 - target_process_cpu_percent: teto de uso de CPU do processo.
 - target_process_rss_mb: teto de memoria RSS do processo.
-- terminal_boot_command: comando inicial do painel PTY.
 - file_nav_root: raiz para o plugin de navegacao de arquivos.
 
 ## Politica de compatibilidade

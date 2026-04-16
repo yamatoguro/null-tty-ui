@@ -30,8 +30,6 @@ pub struct LayoutConfig {
     pub target_process_cpu_percent: Option<f32>,
     /// Maximum expected process RSS in MB.
     pub target_process_rss_mb: Option<u64>,
-    /// Optional startup command executed inside the PTY panel.
-    pub terminal_boot_command: Option<String>,
     /// Optional root path for file navigation plugin.
     pub file_nav_root: Option<String>,
 }

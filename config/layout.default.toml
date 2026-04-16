@@ -11,7 +11,6 @@ diagnostics_log_path = "/tmp/nullbyteui/startup-diagnostics.log"
 target_fps = 2.0
 target_process_cpu_percent = 20.0
 target_process_rss_mb = 180
-terminal_boot_command = "echo 'NullByte PTY online'; while true; do echo \"$USER@$(hostname):$(pwd) $\"; date '+%F %T'; sleep 2; done"
 file_nav_root = "/home/pi"
 
 [regions.top]
@@ -21,7 +20,7 @@ plugin = "system_overview"
 plugin = "process_list"
 
 [regions.center]
-plugin = "terminal"
+plugin = "file_navigation"
 
 [regions.right]
 plugin = "technitium_dns_chart"

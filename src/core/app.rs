@@ -17,7 +17,6 @@ use crate::core::diagnostics::{PerformanceTargets, RuntimeMonitor};
 use crate::core::dns::{self, DnsState};
 use crate::core::file_nav::{self, FileNavState};
 use crate::core::metrics::{MetricsCollector, SystemSnapshot};
-use crate::core::pty::{self, PtyState};
 use crate::plugins::lifecycle::PluginInstance;
 use crate::plugins::manager::PluginManager;
 
@@ -49,7 +48,6 @@ struct TerminalUi {
     collector: MetricsCollector,
     instances: Vec<PluginInstance>,
     dns_state: std::sync::Arc<std::sync::Mutex<DnsState>>,
-    pty_state: std::sync::Arc<std::sync::Mutex<PtyState>>,
     file_nav_state: std::sync::Arc<std::sync::Mutex<FileNavState>>,
     monitor: RuntimeMonitor,
 }
@@ -76,12 +74,6 @@ impl TerminalUi {
         let dns_token = layout.dns_token.clone().unwrap_or_default();
         let dns_state = dns::start_poller(&dns_host, dns_port, &dns_token, Duration::from_millis(2000));
 
-        let pty_command = layout
-            .terminal_boot_command
-            .clone()
-            .unwrap_or_else(|| "echo 'NullByte PTY online'; while true; do echo \"$USER@$(hostname):$(pwd) $\"; date '+%F %T'; sleep 2; done".to_string());
-        let pty_state = pty::start_pty_stream(&pty_command);
-
         let file_nav_root = std::path::PathBuf::from(
             layout
                 .file_nav_root
@@ -106,7 +98,6 @@ impl TerminalUi {
             collector: MetricsCollector::new(),
             instances,
             dns_state,
-            pty_state,
             file_nav_state,
             monitor,
         })
@@ -126,12 +117,6 @@ impl TerminalUi {
 
             let mut snapshot = self.collector.collect();
             snapshot.dns_summary = dns_rendered.clone();
-
-            let pty_rendered = {
-                let s = self.pty_state.lock().unwrap();
-                Some(pty::render_pty_panel(&s))
-            };
-            snapshot.terminal_summary = pty_rendered;
 
             let file_nav_rendered = {
                 let s = self.file_nav_state.lock().unwrap();
@@ -251,7 +236,7 @@ impl TerminalUi {
 
         frame.render_widget(
             Paragraph::new(center)
-                .block(Block::default().borders(Borders::ALL).title(" terminal "))
+                .block(Block::default().borders(Borders::ALL).title(" file_navigation "))
                 .style(Style::default().fg(Color::White)),
             middle[1],
         );

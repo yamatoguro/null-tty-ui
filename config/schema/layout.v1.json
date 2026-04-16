@@ -43,9 +43,6 @@
       "type": "integer",
       "minimum": 1
     },
-    "terminal_boot_command": {
-      "type": "string"
-    },
     "file_nav_root": {
       "type": "string"
     },
