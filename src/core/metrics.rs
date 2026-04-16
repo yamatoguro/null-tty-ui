@@ -22,6 +22,14 @@ pub struct SystemSnapshot {
     pub dns_summary: Option<String>,
     /// Pre-rendered file navigation panel output (injected externally).
     pub file_nav_summary: Option<String>,
+    /// History series used by panel sparklines.
+    pub cpu_history: Vec<u64>,
+    pub mem_history: Vec<u64>,
+    pub disk_history: Vec<u64>,
+    pub net_rx_history: Vec<u64>,
+    pub net_tx_history: Vec<u64>,
+    pub load_history: Vec<u64>,
+    pub dns_query_history: Vec<u64>,
 }
 
 #[derive(Debug, Default)]
@@ -98,6 +106,13 @@ impl MetricsCollector {
             recent_logs,
             dns_summary: None,
             file_nav_summary: None,
+            cpu_history: Vec::new(),
+            mem_history: Vec::new(),
+            disk_history: Vec::new(),
+            net_rx_history: Vec::new(),
+            net_tx_history: Vec::new(),
+            load_history: Vec::new(),
+            dns_query_history: Vec::new(),
         }
     }
 }

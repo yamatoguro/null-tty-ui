@@ -63,10 +63,12 @@ impl PluginInstance {
     fn compute_view(&self, snapshot: &SystemSnapshot) -> PanelViewModel {
         let content = match self.id.as_str() {
             "system_overview" => format!(
-                "CPU:    {:>6.1}%\nRAM:    {:>4}/{:>4} MB\nTemp:   {}\nUptime: {}",
+                "CPU:    {:>6.1}%  {}\nRAM:    {:>4}/{:>4} MB  {}\nTemp:   {}\nUptime: {}",
                 snapshot.cpu_percent,
+                sparkline(&snapshot.cpu_history),
                 snapshot.memory_used_mb,
                 snapshot.memory_total_mb,
+                sparkline(&snapshot.mem_history),
                 snapshot
                     .temp_celsius
                     .map(|v| format!("{v:.1} C"))
@@ -74,15 +76,19 @@ impl PluginInstance {
                 format_uptime(snapshot.uptime_secs),
             ),
             "process_list" => format!(
-                "Disk:   {:.1}/{:.1} GB\nNet RX: {}\nNet TX: {}\nLoad:   {}",
+                "Disk:   {:.1}/{:.1} GB  {}\nNet RX: {}  {}\nNet TX: {}  {}\nLoad:   {}  {}",
                 snapshot.disk_used_gb,
                 snapshot.disk_total_gb,
+                sparkline(&snapshot.disk_history),
                 format_bytes(snapshot.net_rx_bytes),
+                sparkline(&snapshot.net_rx_history),
                 format_bytes(snapshot.net_tx_bytes),
+                sparkline(&snapshot.net_tx_history),
                 snapshot
                     .load_avg
                     .map(|(a, b, c)| format!("{a:.2} {b:.2} {c:.2}"))
                     .unwrap_or_else(|| "n/a".to_string()),
+                sparkline(&snapshot.load_history),
             ),
             "technitium_dns_chart" => snapshot
                 .dns_summary
@@ -129,4 +135,23 @@ fn format_bytes(bytes: u64) -> String {
     } else {
         format!("{bytes} B")
     }
+}
+
+/// Builds compact unicode sparkline for history values.
+fn sparkline(values: &[u64]) -> String {
+    if values.is_empty() {
+        return "-".to_string();
+    }
+
+    let chars: Vec<char> = "▁▂▃▄▅▆▇█".chars().collect();
+    let max = *values.iter().max().unwrap_or(&1);
+    let max = max.max(1);
+
+    values
+        .iter()
+        .map(|v| {
+            let idx = ((*v * (chars.len() as u64 - 1)) / max) as usize;
+            chars[idx.min(chars.len() - 1)]
+        })
+        .collect()
 }

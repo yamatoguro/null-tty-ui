@@ -151,3 +151,13 @@ This file is append-only and is the single source of progress truth during the p
 - why: Stop frame-by-frame terminal updates completely and make DNS panel actually refresh with real data while exposing actionable logs in the standard path.
 - files: src/core/app.rs, src/core/mod.rs, src/core/metrics.rs, src/core/dns.rs, src/plugins/lifecycle.rs, src/config/layout.rs, config/layout.default.toml, config/schema/layout.v1.json, deploy/install-from-github.sh, src/core/pty.rs (removed), plugins/terminal (removed), README.md, docs/release/install-and-customization.md, docs/spec/layout-schema-v1.md, Cargo.toml, docs/context/cumulative-context.md
 - next: Optionally add a DNS self-test command that verifies API connectivity and token before launching UI.
+
+## Entry 015
+- date: 2026-04-15
+- interaction_id: 015
+- tags: [ui, charts, logs, layout-fit]
+- what: Implemented functional time-series graphs across system/process panels and enforced per-panel text fitting so log lines are wrapped/clipped inside their designated layout area.
+- how: Added runtime history buffers (CPU/mem/disk/net/load/DNS), injected those series into SystemSnapshot each tick, rendered sparklines in plugin lifecycle views, and introduced area-aware text formatting in app renderer (`fit_text_to_area`) to wrap long lines and clip overflow by panel width/height.
+- why: Deliver visible real-time graphs and prevent log/content overflow from breaking panel boundaries.
+- files: src/core/app.rs, src/core/metrics.rs, src/plugins/lifecycle.rs, src/core/dns.rs, docs/context/cumulative-context.md
+- next: Optional enhancement is adding true ratatui chart widgets per panel for axis/grid legends.

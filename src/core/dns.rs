@@ -111,6 +111,11 @@ pub fn render_dns_panel(state: &DnsState) -> String {
     )
 }
 
+/// Returns latest total queries value, if available.
+pub fn latest_total_queries(state: &DnsState) -> Option<u64> {
+    state.samples.back().map(|s| s.total_queries)
+}
+
 /// Builds a fixed-width ASCII sparkline from a series of u64 values.
 fn build_sparkline(values: impl Iterator<Item = u64>) -> String {
     let bars = " ▁▂▃▄▅▆▇█";
