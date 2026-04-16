@@ -7,6 +7,15 @@ REPO="${REPO:-yamatoguro/null-tty-ui}"
 REF="${REF:-main}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/nullbyteui}"
 BIN_LINK="${BIN_LINK:-/usr/local/bin/null-ui}"
+CLEAN_INSTALL="${CLEAN_INSTALL:-0}"
+
+REQUIRED_PLUGINS=(
+  "system_overview"
+  "process_list"
+  "terminal"
+  "technitium_dns_chart"
+  "log_stream"
+)
 
 require_cmd() {
   local cmd="$1"
@@ -26,6 +35,47 @@ ensure_rust() {
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   # shellcheck disable=SC1090
   source "$HOME/.cargo/env"
+}
+
+repair_or_prepare_target() {
+  if [ "$CLEAN_INSTALL" = "1" ] && [ -d "$INSTALL_DIR" ]; then
+    echo "[install] CLEAN_INSTALL=1 definido. Limpando instalação anterior em $INSTALL_DIR..."
+    sudo rm -rf "$INSTALL_DIR"
+  fi
+
+  if [ -d "$INSTALL_DIR" ]; then
+    echo "[install] Instalação existente detectada em $INSTALL_DIR. Aplicando modo reparo (refresh completo)."
+  fi
+
+  sudo install -d "$INSTALL_DIR/config" "$INSTALL_DIR/plugins"
+}
+
+validate_installation() {
+  local layout="$INSTALL_DIR/config/layout.default.toml"
+  local plugin
+
+  if [ ! -f "$layout" ]; then
+    echo "Erro: layout não encontrado em $layout"
+    exit 1
+  fi
+
+  for plugin in "${REQUIRED_PLUGINS[@]}"; do
+    if [ ! -f "$INSTALL_DIR/plugins/$plugin/manifest.toml" ]; then
+      echo "Erro: plugin obrigatório ausente: $plugin"
+      echo "Dica: reexecute com CLEAN_INSTALL=1 para recriar instalação limpa."
+      exit 1
+    fi
+  done
+
+  # Verifica também os plugins referenciados no layout default.
+  while IFS= read -r plugin; do
+    [ -z "$plugin" ] && continue
+    if [ ! -f "$INSTALL_DIR/plugins/$plugin/manifest.toml" ]; then
+      echo "Erro: plugin referenciado no layout e não encontrado: $plugin"
+      echo "Dica: reexecute com CLEAN_INSTALL=1 para reparar completamente."
+      exit 1
+    fi
+  done < <(awk -F'"' '/plugin\s*=\s*"/{print $2}' "$layout")
 }
 
 main() {
@@ -60,20 +110,26 @@ main() {
     cargo build --release
   )
 
+  repair_or_prepare_target
+
   echo "[install] Instalando arquivos em $INSTALL_DIR..."
-  sudo install -d "$INSTALL_DIR/config" "$INSTALL_DIR/plugins"
+  # Recria plugins para evitar sobras de instalações antigas/corrompidas.
+  sudo rm -rf "$INSTALL_DIR/plugins"
+  sudo install -d "$INSTALL_DIR/plugins"
   sudo install -m 0755 "$src_dir/target/release/nullbyteui" "$INSTALL_DIR/nullbyteui"
   sudo cp "$src_dir/config/layout.default.toml" "$INSTALL_DIR/config/layout.default.toml"
   sudo cp -r "$src_dir/plugins/." "$INSTALL_DIR/plugins/"
 
   echo "[install] Criando comando global $BIN_LINK..."
-  sudo tee "$BIN_LINK" >/dev/null <<'EOF'
+  sudo tee "$BIN_LINK" >/dev/null <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-cd /opt/nullbyteui
-exec /opt/nullbyteui/nullbyteui --config /opt/nullbyteui/config/layout.default.toml "$@"
+cd "$INSTALL_DIR"
+exec "$INSTALL_DIR/nullbyteui" --config "$INSTALL_DIR/config/layout.default.toml" "\$@"
 EOF
   sudo chmod +x "$BIN_LINK"
+
+  validate_installation
 
   echo
   echo "Instalação concluída."

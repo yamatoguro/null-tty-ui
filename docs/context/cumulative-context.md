@@ -121,3 +121,13 @@ This file is append-only and is the single source of progress truth during the p
 - why: Runtime plugin manager uses relative `plugins/` path; running outside install dir caused errors like `configured plugin not found` for random plugins.
 - files: deploy/install-from-github.sh, docs/context/cumulative-context.md
 - next: Consider making plugin path absolute in runtime for extra robustness.
+
+## Entry 012
+- date: 2026-04-15
+- interaction_id: 012
+- tags: [installer, self-healing, idempotent, recovery]
+- what: Added countermeasures in the GitHub one-line installer to repair broken prior installs when the script is re-run.
+- how: Introduced `CLEAN_INSTALL=1` optional clean mode, repair path detection, full plugin directory refresh to remove stale/corrupt leftovers, dynamic wrapper generation using INSTALL_DIR, and post-install validation for required and layout-referenced plugins.
+- why: Ensure re-running the same installer recovers inconsistent installations instead of failing with random plugin-not-found errors.
+- files: deploy/install-from-github.sh, docs/context/cumulative-context.md
+- next: Consider adding a `--self-test` runtime flag to validate config/plugins without opening the UI.
