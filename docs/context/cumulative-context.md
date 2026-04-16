@@ -81,3 +81,13 @@ This file is append-only and is the single source of progress truth during the p
 - why: Deliver a clean warning-free codebase and a reproducible first-version release/install flow.
 - files: src/core/bus.rs, src/core/app.rs, src/core/dns.rs, src/plugins/lifecycle.rs, src/plugins/manager.rs, docs/planning/backlog.md, README.md, config/schema/layout.v1.json, docs/spec/layout-schema-v1.md, docs/release/install-and-customization.md, scripts/release/package.sh, deploy/install-local.sh
 - next: Optional next step is cross-build/package for aarch64 Raspberry Pi target and execute systemd install on device.
+
+## Entry 008
+- date: 2026-04-15
+- interaction_id: 008
+- tags: [git, repository-init, commit-history, github-push]
+- what: Initialized local Git repository, corrected Git author identity to the user-provided values, organized the project into milestone commits, and connected/pushed to the GitHub remote repository.
+- how: Verified Git installation, ran git init on main, set local user.name/user.email, committed docs/governance and implementation/release tooling in separate commits, configured origin to github.com/yamatoguro/null-tty-ui.git, and pushed main with upstream tracking.
+- why: Ensure traceable local history and publish all project work to the target remote repository.
+- files: .gitignore, docs/context/cumulative-context.md
+- next: Continue normal development flow with focused commits per feature/fix and push incrementally.
