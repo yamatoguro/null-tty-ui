@@ -47,5 +47,18 @@ Cada plugin usa manifesto TOML com os campos:
 - permissions
 
 ## Instalacao
+- Instalacao direta sem clone (Raspberry Pi):
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/yamatoguro/null-tty-ui/main/deploy/install-from-github.sh)
+```
+
+- Reinstalacao limpa (reparo):
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/yamatoguro/null-tty-ui/main/deploy/install-from-github.sh) --clean
+```
+
+- Comando para executar apos instalar: `null-ui`
 - Guia completo: `docs/release/install-and-customization.md`
 - Schema congelado v1: `docs/spec/layout-schema-v1.md`

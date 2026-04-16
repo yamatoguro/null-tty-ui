@@ -16,6 +16,12 @@ Cole este comando na Raspberry Pi 4:
 bash <(curl -fsSL https://raw.githubusercontent.com/yamatoguro/null-tty-ui/main/deploy/install-from-github.sh)
 ```
 
+Se quiser forçar reinstalação limpa (corrigir instalação antiga quebrada):
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/yamatoguro/null-tty-ui/main/deploy/install-from-github.sh) --clean
+```
+
 Depois da instalacao, execute:
 
 ```bash

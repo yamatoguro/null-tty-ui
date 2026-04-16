@@ -131,3 +131,13 @@ This file is append-only and is the single source of progress truth during the p
 - why: Ensure re-running the same installer recovers inconsistent installations instead of failing with random plugin-not-found errors.
 - files: deploy/install-from-github.sh, docs/context/cumulative-context.md
 - next: Consider adding a `--self-test` runtime flag to validate config/plugins without opening the UI.
+
+## Entry 013
+- date: 2026-04-15
+- interaction_id: 013
+- tags: [installer, cli-args, clean-reinstall, docs]
+- what: Added explicit `--clean` CLI parameter to the GitHub one-line installer and documented command examples.
+- how: Implemented argument parser (`parse_args`) with `--clean`, `--ref`, `--repo`, and `--help`; updated README and install guide with one-liner commands including forced clean reinstall mode.
+- why: Guarantee users can trigger clean repair directly by parameter when running installer via `bash <(curl ...)`.
+- files: deploy/install-from-github.sh, README.md, docs/release/install-and-customization.md, docs/context/cumulative-context.md
+- next: Optionally support additional flags for non-sudo/local installs in restricted environments.

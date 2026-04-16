@@ -17,6 +17,54 @@ REQUIRED_PLUGINS=(
   "log_stream"
 )
 
+usage() {
+  cat <<EOF
+Uso: install-from-github.sh [opções]
+
+Opções:
+  --clean              Força reinstalação limpa (equivalente a CLEAN_INSTALL=1)
+  --ref <git-ref>      Define branch/tag/commit para download (padrão: main)
+  --repo <owner/repo>  Define repositório GitHub (padrão: yamatoguro/null-tty-ui)
+  -h, --help           Mostra esta ajuda
+EOF
+}
+
+parse_args() {
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --clean)
+        CLEAN_INSTALL=1
+        shift
+        ;;
+      --ref)
+        if [ "$#" -lt 2 ]; then
+          echo "Erro: --ref exige um valor."
+          exit 1
+        fi
+        REF="$2"
+        shift 2
+        ;;
+      --repo)
+        if [ "$#" -lt 2 ]; then
+          echo "Erro: --repo exige um valor."
+          exit 1
+        fi
+        REPO="$2"
+        shift 2
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        echo "Erro: argumento desconhecido: $1"
+        usage
+        exit 1
+        ;;
+    esac
+  done
+}
+
 require_cmd() {
   local cmd="$1"
   if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -79,6 +127,8 @@ validate_installation() {
 }
 
 main() {
+  parse_args "$@"
+
   require_cmd curl
   require_cmd tar
   require_cmd sudo
