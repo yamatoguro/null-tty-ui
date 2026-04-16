@@ -101,3 +101,23 @@ This file is append-only and is the single source of progress truth during the p
 - why: Enable frictionless install/test flow by pasting a single command into terminal on Raspberry Pi 4.
 - files: deploy/install-from-github.sh, docs/release/install-and-customization.md, docs/context/cumulative-context.md
 - next: Optionally add a release-asset installer path to avoid local compile time on low-power devices.
+
+## Entry 010
+- date: 2026-04-15
+- interaction_id: 010
+- tags: [readme, install, github-one-liner]
+- what: Added direct installation command from GitHub to README with immediate run command.
+- how: Updated installation section to include one-line curl+bash command pointing to deploy/install-from-github.sh and documented `null-ui` as the execution command.
+- why: Make onboarding faster by keeping copy-paste install instructions visible at the repository entry point.
+- files: README.md, docs/context/cumulative-context.md
+- next: Keep README and install guide synchronized whenever install flow changes.
+
+## Entry 011
+- date: 2026-04-15
+- interaction_id: 011
+- tags: [installer, bugfix, runtime-path, plugins]
+- what: Fixed one-line installer wrapper so `null-ui` starts from `/opt/nullbyteui`, preventing plugin manifest lookup failures.
+- how: Updated generated `/usr/local/bin/null-ui` wrapper in deploy/install-from-github.sh to `cd /opt/nullbyteui` before launching the binary with config path.
+- why: Runtime plugin manager uses relative `plugins/` path; running outside install dir caused errors like `configured plugin not found` for random plugins.
+- files: deploy/install-from-github.sh, docs/context/cumulative-context.md
+- next: Consider making plugin path absolute in runtime for extra robustness.

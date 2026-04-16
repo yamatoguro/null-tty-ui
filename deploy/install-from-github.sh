@@ -69,6 +69,8 @@ main() {
   echo "[install] Criando comando global $BIN_LINK..."
   sudo tee "$BIN_LINK" >/dev/null <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
+cd /opt/nullbyteui
 exec /opt/nullbyteui/nullbyteui --config /opt/nullbyteui/config/layout.default.toml "$@"
 EOF
   sudo chmod +x "$BIN_LINK"
