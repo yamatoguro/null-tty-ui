@@ -9,7 +9,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScree
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Color, Style};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::{Block, Borders, Paragraph, Sparkline};
 use ratatui::{Frame, Terminal};
 
 use crate::config::layout::LayoutConfig;
@@ -204,9 +204,21 @@ impl TerminalUi {
             let right = panel("right");
             let bottom = panel("bottom");
             let status = build_status_line(&self.layout.profile, &snapshot, panel_updates);
+            let snapshot_for_frame = snapshot.clone();
 
             self.terminal
-                .draw(|frame| Self::render_frame(frame, &top, &left, &center, &right, &bottom, &status))
+                .draw(|frame| {
+                    Self::render_frame(
+                        frame,
+                        &top,
+                        &left,
+                        &center,
+                        &right,
+                        &bottom,
+                        &status,
+                        &snapshot_for_frame,
+                    )
+                })
                 .context("failed drawing terminal frame")?;
             self.monitor.on_frame_rendered();
             self.monitor.report_if_due(Duration::from_secs(5));
@@ -241,6 +253,7 @@ impl TerminalUi {
         right: &str,
         bottom: &str,
         status: &str,
+        snap: &SystemSnapshot,
     ) {
         let root = frame.area();
         let vertical = Layout::default()
@@ -269,19 +282,59 @@ impl TerminalUi {
             vertical[0],
         );
 
-        frame.render_widget(
-            Paragraph::new(fit_text_to_area(top, vertical[1].width, vertical[1].height, true))
-                .block(Block::default().borders(Borders::ALL).title(" system_overview "))
-                .style(Style::default().fg(Color::LightCyan)),
-            vertical[1],
-        );
+        let top_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(3), Constraint::Length(3)])
+            .split(vertical[1]);
 
         frame.render_widget(
-            Paragraph::new(fit_text_to_area(left, middle[0].width, middle[0].height, true))
+            Paragraph::new(fit_text_to_area(top, top_chunks[0].width, top_chunks[0].height, true))
+                .block(Block::default().borders(Borders::ALL).title(" system_overview "))
+                .style(Style::default().fg(Color::LightCyan)),
+            top_chunks[0],
+        );
+
+        if top_chunks[1].height >= 3 {
+            let top_charts = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Percentage(34),
+                    Constraint::Percentage(33),
+                    Constraint::Percentage(33),
+                ])
+                .split(top_chunks[1]);
+
+            render_metric_chart(frame, top_charts[0], "cpu%", &snap.cpu_history, Color::Cyan);
+            render_metric_chart(frame, top_charts[1], "mem%", &snap.mem_history, Color::Green);
+            render_metric_chart(frame, top_charts[2], "load", &snap.load_history, Color::Yellow);
+        }
+
+        let left_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(4), Constraint::Length(3)])
+            .split(middle[0]);
+
+        frame.render_widget(
+            Paragraph::new(fit_text_to_area(left, left_chunks[0].width, left_chunks[0].height, true))
                 .block(Block::default().borders(Borders::ALL).title(" process_list "))
                 .style(Style::default().fg(Color::Green)),
-            middle[0],
+            left_chunks[0],
         );
+
+        if left_chunks[1].height >= 3 {
+            let left_charts = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Percentage(34),
+                    Constraint::Percentage(33),
+                    Constraint::Percentage(33),
+                ])
+                .split(left_chunks[1]);
+
+            render_metric_chart(frame, left_charts[0], "disk%", &snap.disk_history, Color::Magenta);
+            render_metric_chart(frame, left_charts[1], "rx", &snap.net_rx_history, Color::Blue);
+            render_metric_chart(frame, left_charts[2], "tx", &snap.net_tx_history, Color::LightBlue);
+        }
 
         frame.render_widget(
             Paragraph::new(fit_text_to_area(center, middle[1].width, middle[1].height, true))
@@ -290,12 +343,27 @@ impl TerminalUi {
             middle[1],
         );
 
+        let right_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(4), Constraint::Length(3)])
+            .split(middle[2]);
+
         frame.render_widget(
-            Paragraph::new(fit_text_to_area(right, middle[2].width, middle[2].height, true))
+            Paragraph::new(fit_text_to_area(right, right_chunks[0].width, right_chunks[0].height, true))
                 .block(Block::default().borders(Borders::ALL).title(" technitium_dns "))
                 .style(Style::default().fg(Color::LightYellow)),
-            middle[2],
+            right_chunks[0],
         );
+
+        if right_chunks[1].height >= 3 {
+            render_metric_chart(
+                frame,
+                right_chunks[1],
+                "dns q",
+                &snap.dns_query_history,
+                Color::LightYellow,
+            );
+        }
 
         let bottom_combined = format!("{bottom}\n{status}");
         frame.render_widget(
@@ -396,4 +464,17 @@ fn fit_text_to_area(text: &str, width: u16, height: u16, wrap: bool) -> String {
 
 fn trim_to_width(text: &str, width: usize) -> String {
     text.chars().take(width).collect()
+}
+
+fn render_metric_chart(frame: &mut Frame<'_>, area: ratatui::layout::Rect, title: &str, series: &[u64], color: Color) {
+    let fallback = [0u64; 1];
+    let data = if series.is_empty() { &fallback[..] } else { series };
+
+    frame.render_widget(
+        Sparkline::default()
+            .block(Block::default().borders(Borders::ALL).title(format!(" {title} ")))
+            .data(data)
+            .style(Style::default().fg(color)),
+        area,
+    );
 }

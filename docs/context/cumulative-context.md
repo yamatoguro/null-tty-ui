@@ -161,3 +161,13 @@ This file is append-only and is the single source of progress truth during the p
 - why: Deliver visible real-time graphs and prevent log/content overflow from breaking panel boundaries.
 - files: src/core/app.rs, src/core/metrics.rs, src/plugins/lifecycle.rs, src/core/dns.rs, docs/context/cumulative-context.md
 - next: Optional enhancement is adding true ratatui chart widgets per panel for axis/grid legends.
+
+## Entry 016
+- date: 2026-04-15
+- interaction_id: 016
+- tags: [ui, ratatui, charts, widget-upgrade]
+- what: Replaced text-based sparklines with native ratatui `Sparkline` widgets and organized chart regions per panel.
+- how: Updated app renderer to split top/left/right regions into text + chart areas, rendering widget charts for CPU/MEM/LOAD, DISK/RX/TX, and DNS queries; simplified plugin textual content accordingly while preserving area-fit clipping/wrapping.
+- why: Improve readability and chart stability with native widgets while keeping logs and text bounded to designated panel dimensions.
+- files: src/core/app.rs, src/plugins/lifecycle.rs, docs/context/cumulative-context.md
+- next: Optional next step is migrating sparkline widgets to full `Chart` widgets with axes and labels.
